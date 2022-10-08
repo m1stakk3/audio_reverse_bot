@@ -2,6 +2,8 @@ import telebot
 import requests
 import datetime
 import os
+from pydub import AudioSegment
+from pydub.playback import play
 
 from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
@@ -13,6 +15,7 @@ def send_welcome(message):
 
     if message.text == '/start' and os.path.exists(f"D:\\Python\\AUDIO BOT\\{message.from_user.id}\\"
                                                    f"{message.from_user.id}.txt") is False:
+        os.mkdir(f"D:\\Python\\AUDIO BOT\\{message.from_user.id}\\")
         with open(f"{message.from_user.id}/{message.from_user.id}.txt", 'w', encoding='utf-8') as user_data:
             user_data.write(f"User ID: {message.from_user.id}\n"
                             f"Username: {message.from_user.username}\n"
@@ -43,13 +46,20 @@ def voice_converter(message):
     input_audio = requests.get(f"https://api.telegram.org/file/bot5547424286:AAHnb468ZF9ljFx2C55Lvsc0hLSr2QRI0XU/"
                                f"{audio_url}")
     input_audio = input_audio.content
-    end_path = f'{message.from_user.id}/INPUT/{str(datetime.datetime.today()).replace(":", "-")[:-7]}.ogg'
+    input_path = f'{message.from_user.id}/INPUT/{str(datetime.datetime.today()).replace(":", "-")[:-7]}.ogg'
 
     if os.path.exists(f"D:\\Python\\AUDIO BOT\\{message.from_user.id}\\INPUT") is False:
         os.mkdir(f"D:\\Python\\AUDIO BOT\\{message.from_user.id}\\INPUT")
 
-    with open(end_path, 'wb') as audio_in:
+    with open(input_path, 'wb') as audio_in:
         audio_in.write(input_audio)
+
+    output_path = f"D:\\Python\\AUDIO BOT\\{message.from_user.id}\\OUTPUT"
+
+    reversed_audio = AudioSegment.from_ogg(input_path).reverse()
+    reversed_audio.export(f'{output_path}\\{str(datetime.datetime.today()).replace(":", "-")[:-7]}.ogg', format='ogg')
+    with open(f'{output_path}\\{str(datetime.datetime.today()).replace(":", "-")[:-7]}.ogg', 'rb') as result_file:
+        bot.send_audio(message.chat.id, result_file)
 
 
 bot.infinity_polling()
